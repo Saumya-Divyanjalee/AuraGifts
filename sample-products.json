@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Rain Sound Jar",
+    "category": "Relaxation Gifts",
+    "price": 1500,
+    "image": "https://images.unsplash.com/photo-1519681393784-d120267933ba",
+    "description": "A calming glass jar that mimics gentle rainfall sounds when tilted."
+  },
+  {
+    "name": "Crinkle Wrap Gift Box",
+    "category": "ASMR Kits",
+    "price": 2200,
+    "image": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48",
+    "description": "Satisfying crinkle-paper wrapped surprise box with soft textures inside."
+  },
+  {
+    "name": "Wooden Wind Chime",
+    "category": "Couple Gifts",
+    "price": 1800,
+    "image": "https://images.unsplash.com/photo-1602934585418-f588bea4215d",
+    "description": "Soft wooden chimes producing soothing tones for a peaceful home."
+  },
+  {
+    "name": "Soft Sand Fidget Box",
+    "category": "Kids ASMR Kits",
+    "price": 1200,
+    "image": "https://images.unsplash.com/photo-1596460107916-430662021049",
+    "description": "A tactile sand-filled fidget toy for calming, repetitive play."
+  },
+  {
+    "name": "Scented Candle Trio",
+    "category": "Relaxation Gifts",
+    "price": 2500,
+    "image": "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6",
+    "description": "Three hand-poured candles with lavender, vanilla, and sandalwood scents."
+  }
+]
