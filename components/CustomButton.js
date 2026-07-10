@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   text: {
-    color: COLORS.background,
+    color: "#FFFFFF",
     fontFamily: FONTS.bodySemiBold,
     fontSize: 15,
     letterSpacing: 0.5,

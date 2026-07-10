@@ -1,7 +1,8 @@
 // context/AuthContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebaseConfig";
 import { login as loginService, signup as signupService, logout as logoutService } from "../services/authService";
 
 const AuthContext = createContext();
@@ -10,17 +11,30 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [photoURL, setPhotoURL] = useState(null);
   const [loading, setLoading] = useState(true); // true while checking auth state on app start
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      if (firebaseUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          setIsAdmin(userDoc.exists() && userDoc.data().isAdmin === true);
+          setPhotoURL(userDoc.exists() ? userDoc.data().photoURL || null : null);
+        } catch (e) {
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+        setPhotoURL(null);
+      }
       setLoading(false);
     });
     return unsubscribe;
   }, []);
-
   const login = async (email, password) => {
     setError(null);
     try {
@@ -52,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, signup, logout, setError }}>
+     <AuthContext.Provider value={{ user, isAdmin, photoURL, setPhotoURL, loading, error, login, signup, logout, setError }}>
       {children}
     </AuthContext.Provider>
   );

@@ -36,7 +36,6 @@ export const subscribeToUserOrders = (userId, callback) => {
   });
 };
 
-// UPDATE order status (e.g. after payment confirmation)
-export const updateOrderStatus = async (orderId, status) => {
-  await updateDoc(doc(db, "orders", orderId), { status });
+export const updateOrderReviewPhoto = async (orderId, photoBase64) => {
+  await updateDoc(doc(db, "orders", orderId), { reviewPhoto: photoBase64 });
 };

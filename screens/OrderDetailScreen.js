@@ -1,7 +1,9 @@
-import React from "react";
-import { View, Text, StyleSheet, FlatList } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, FlatList, Image, Alert } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import CustomButton from "../components/CustomButton";
+import { updateOrderReviewPhoto } from "../services/orderService";
 import { COLORS, FONTS, RADIUS } from "../theme";
-
 const STATUS_COLORS = {
   pending: "#D4AF7A",
   paid: "#7FA6D4",
@@ -11,6 +13,36 @@ const STATUS_COLORS = {
 
 export default function OrderDetailScreen({ route }) {
   const { order } = route.params;
+  const [reviewPhoto, setReviewPhoto] = useState(order.reviewPhoto || null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleTakePhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Camera access is required to take a photo.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.3,
+      base64: true,
+      aspect: [1, 1],
+      allowsEditing: true,
+    });
+
+    if (!result.canceled && result.assets?.[0]?.base64) {
+      const dataUri = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      setUploading(true);
+      try {
+        await updateOrderReviewPhoto(order.id, dataUri);
+        setReviewPhoto(dataUri);
+      } catch (e) {
+        Alert.alert("Error", "Could not save photo.");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -38,7 +70,20 @@ export default function OrderDetailScreen({ route }) {
         <Text style={styles.totalValue}>Rs. {order.totalAmount.toFixed(2)}</Text>
       </View>
 
-      <Text style={styles.meta}>Payment method: {order.paymentMethod || "mock"}</Text>
+       <Text style={styles.meta}>Payment method: {order.paymentMethod || "mock"}</Text>
+
+      <Text style={styles.sectionTitle}>Gift Review Photo</Text>
+      {reviewPhoto ? (
+        <Image source={{ uri: reviewPhoto }} style={styles.reviewImage} />
+      ) : (
+        <Text style={styles.meta}>No photo added yet.</Text>
+      )}
+      <CustomButton
+        title={reviewPhoto ? "Retake Photo" : "Take Photo"}
+        variant="outline"
+        onPress={handleTakePhoto}
+        loading={uploading}
+      />
     </View>
   );
 }
@@ -61,4 +106,11 @@ const styles = StyleSheet.create({
   totalLabel: { fontFamily: FONTS.heading, color: COLORS.textPrimary, fontSize: 16 },
   totalValue: { fontFamily: FONTS.heading, color: COLORS.gold, fontSize: 16 },
   meta: { fontFamily: FONTS.body, color: COLORS.textMuted, fontSize: 11, marginTop: 16, textAlign: "center" },
+  reviewImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: RADIUS.card,
+    marginBottom: 10,
+    backgroundColor: COLORS.surface,
+  },
 });

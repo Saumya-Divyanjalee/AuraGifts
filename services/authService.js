@@ -8,6 +8,9 @@ import {
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
+export const updateProfilePhoto = async (uid, photoBase64) => {
+  await setDoc(doc(db, "users", uid), { photoURL: photoBase64 }, { merge: true });
+};
 export const signup = async (name, email, password) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(userCredential.user, { displayName: name });

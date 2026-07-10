@@ -1,27 +1,30 @@
 {
   "expo": {
-    "name": "ASMR Gift Shop",
+     "name": "AuraGifts",
     "slug": "asmr-gift-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
+   "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#121212"
+      "resizeMode": "cover",
+      "backgroundColor": "#181229"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true
+   "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to let you take a photo of your gift for your order review."
+      }
     },
     "android": {
       "package": "com.saumya.asmrgiftapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#121212"
+        "backgroundColor": "#181229"
       }
     },
     "web": {

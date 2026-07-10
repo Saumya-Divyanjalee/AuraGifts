@@ -1,32 +1,101 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Image, Alert } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useThemeColors } from "../context/ThemeContext";
+import { updateProfilePhoto } from "../services/authService";
 import CustomButton from "../components/CustomButton";
-import { COLORS, FONTS } from "../theme";
+import { FONTS } from "../theme";
 
 export default function ProfileScreen({ navigation }) {
-  const { user, logout } = useAuth();
+  const { user, isAdmin, photoURL, setPhotoURL, logout } = useAuth();
   const { totalItems, totalAmount } = useCart();
+  const { colors, isSleepMode, toggleSleepMode } = useThemeColors();
+  const [uploading, setUploading] = useState(false);
+
+  const handlePickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Photo library access is required to set a profile picture.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.4,
+      base64: true,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled && result.assets?.[0]?.base64) {
+      const dataUri = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      setUploading(true);
+      try {
+        await updateProfilePhoto(user.uid, dataUri);
+        setPhotoURL(dataUri);
+      } catch (e) {
+        Alert.alert("Error", "Could not update profile photo.");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{(user?.displayName || "U")[0].toUpperCase()}</Text>
-      </View>
-      <Text style={styles.name}>{user?.displayName || "User"}</Text>
-      <Text style={styles.email}>{user?.email}</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <TouchableOpacity onPress={handlePickPhoto} disabled={uploading} style={styles.avatarWrap}>
+        {photoURL ? (
+          <Image source={{ uri: photoURL }} style={[styles.avatarImage, { borderColor: colors.gold }]} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: colors.surfaceAlt, borderColor: colors.gold }]}>
+            <Text style={[styles.avatarText, { color: colors.gold }]}>
+              {(user?.displayName || "U")[0].toUpperCase()}
+            </Text>
+          </View>
+        )}
+        <View style={[styles.cameraBadge, { backgroundColor: colors.gold, borderColor: colors.background }]}>
+          <Text style={styles.cameraBadgeText}>{uploading ? "…" : "✎"}</Text>
+        </View>
+      </TouchableOpacity>
 
-       <View style={styles.cartCard}>
-        <Text style={styles.cartLabel}>My Cart</Text>
-        <Text style={styles.cartValue}>{totalItems} item{totalItems !== 1 ? "s" : ""} · Rs. {totalAmount.toFixed(2)}</Text>
-        <CustomButton
-          title="View Cart & Order"
-          onPress={() => navigation.navigate("HomeTab", { screen: "Cart" })}
+      <Text style={[styles.name, { color: colors.textPrimary }]}>{user?.displayName || "User"}</Text>
+      <Text style={[styles.email, { color: colors.textMuted }]}>{user?.email}</Text>
+      {isAdmin && (
+        <View style={[styles.adminBadge, { backgroundColor: colors.gold }]}>
+          <Text style={[styles.adminBadgeText, { color: colors.background }]}>ADMIN</Text>
+        </View>
+      )}
+
+      <View style={[styles.card, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+        <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>My Cart</Text>
+        <Text style={[styles.cardValue, { color: colors.gold }]}>
+          {totalItems} item{totalItems !== 1 ? "s" : ""} · Rs. {totalAmount.toFixed(2)}
+        </Text>
+        <CustomButton title="View Cart & Order" onPress={() => navigation.navigate("HomeTab", { screen: "Cart" })} />
+      </View>
+
+      <View style={[styles.card, styles.rowCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>Sleep Mode</Text>
+          <Text style={[styles.rowSubtext, { color: colors.textMuted }]}>Deep purple, easier on the eyes at night</Text>
+        </View>
+        <Switch
+          value={isSleepMode}
+          onValueChange={toggleSleepMode}
+          trackColor={{ false: colors.border, true: colors.gold }}
+          thumbColor={colors.surface}
         />
       </View>
 
-       <View style={styles.buttonWrap}>
+      {isAdmin && (
+        <View style={styles.buttonWrap}>
+          <CustomButton title="Manage Products" onPress={() => navigation.navigate("HomeTab", { screen: "ManageProducts" })} />
+        </View>
+      )}
+
+      <View style={styles.buttonWrap}>
         <CustomButton title="Logout" variant="outline" onPress={logout} />
       </View>
     </View>
@@ -37,60 +106,93 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingTop: 60,
-    backgroundColor: COLORS.background,
+    paddingTop: 56,
+  },
+  avatarWrap: {
+    marginBottom: 14,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: COLORS.surfaceAlt,
-    borderWidth: 1,
-    borderColor: COLORS.gold,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 1.5,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 1.5,
   },
   avatarText: {
-    color: COLORS.gold,
-    fontSize: 30,
+    fontSize: 34,
     fontFamily: FONTS.heading,
   },
+  cameraBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cameraBadgeText: {
+    fontSize: 13,
+    color: "#fff",
+  },
   name: {
-    fontSize: 19,
+    fontSize: 20,
     fontFamily: FONTS.heading,
-    color: COLORS.textPrimary,
   },
   email: {
     fontSize: 13,
     fontFamily: FONTS.body,
-    color: COLORS.textMuted,
     marginTop: 4,
-    marginBottom: 30,
   },
- buttonWrap: {
-    width: "80%",
+  adminBadge: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
-  cartCard: {
-    width: "80%",
-    backgroundColor: COLORS.surfaceAlt,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  cartLabel: {
+  adminBadgeText: {
+    fontSize: 10,
     fontFamily: FONTS.bodySemiBold,
-    color: COLORS.textPrimary,
+    letterSpacing: 1,
+  },
+  card: {
+    width: "85%",
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 18,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  rowCard: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cardLabel: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
   },
-  cartValue: {
+  cardValue: {
     fontFamily: FONTS.body,
-    color: COLORS.gold,
     fontSize: 13,
     marginTop: 4,
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  rowSubtext: {
+    fontFamily: FONTS.body,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  buttonWrap: {
+    width: "85%",
+    marginTop: 16,
   },
 });
