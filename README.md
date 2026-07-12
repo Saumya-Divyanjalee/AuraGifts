@@ -1,6 +1,6 @@
 # AuraGifts 🎁✨
 
-A calming, ASMR-inspired online gift shop mobile app — built with React Native (Expo) and Firebase.
+A calming, ASMR-inspired online gift shop mobile app - built with React Native (Expo) and Firebase.
 Developed as the final coursework project for **ITS 2127 – Advanced Mobile Developer (AMD)**,
 Graduate Diploma in Software Engineering, IJSE.
 
